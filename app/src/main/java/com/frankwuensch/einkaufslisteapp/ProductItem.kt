@@ -1,28 +1,11 @@
 package com.frankwuensch.einkaufslisteapp
 
-class ProductItem(
-    product: String,
-    quantity: Int,
-    id: Long
+data class ProductItem(
+    var product: String,
+    var quantity: Int,
+    var isChecked: Boolean = false,
+    var id: Long? = null
 ) {
-    var product: String = product
-        get() = field
-        set(value) {
-            field = value
-        }
-
-    var quantity: Int = quantity
-        get() = field
-        set(value) {
-            field = value
-        }
-
-    var id: Long = id
-        get() = field
-        set(value) {
-            field = value
-        }
-
     override fun toString(): String {
         return "$quantity x $product"
     }

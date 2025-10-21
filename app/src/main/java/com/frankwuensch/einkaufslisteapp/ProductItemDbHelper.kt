@@ -11,16 +11,18 @@ class ProductItemDbHelper(context: Context) :
         private const val DATABASE_NAME: String = "einkaufsliste.db"
         private const val DATABASE_VERSION: Int = 1
         private val LOG_TAG: String = ProductItemDbHelper::class.java.simpleName
-        private const val TABLE_SHOPPING_LIST: String = "einkaufsliste"
+        const val TABLE_SHOPPING_LIST: String = "einkaufsliste"
 
         // definition of variables for database fields
-        private const val COLUMN_ID: String = "_id"
-        private const val COLUMN_PRODUCT: String = "product"
-        private const val COLUMN_QUANTITY: String = "quantity"
+        const val COLUMN_ID: String = "_id"
+        const val COLUMN_PRODUCT: String = "product"
+        const val COLUMN_QUANTITY: String = "quantity"
+
+        const val COLUMN_BROUGHT: String = "bought"
 
         // create string for database
         private const val SQL_CREATE: String =
-            "CREATE TABLE $TABLE_SHOPPING_LIST($COLUMN_ID INTEGER PRIMARY KEY AUTOINCREMENT, $COLUMN_PRODUCT TEXT NOT NULL, $COLUMN_QUANTITY INTEGER NOT NULL);"
+            "CREATE TABLE $TABLE_SHOPPING_LIST($COLUMN_ID INTEGER PRIMARY KEY AUTOINCREMENT, $COLUMN_PRODUCT TEXT NOT NULL, $COLUMN_QUANTITY INTEGER NOT NULL, $COLUMN_BROUGHT INTEGER DEFAULT 0);"
     }
 
     init {

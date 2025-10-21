@@ -1,0 +1,41 @@
+package com.frankwuensch.einkaufslisteapp
+
+import android.content.Context
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ArrayAdapter
+import android.widget.CheckBox
+import android.widget.TextView
+
+class ProductAdapter(
+    context: Context,
+    private val items: MutableList<ProductItem>,
+    val dataSource: ProductItemDataSource
+) : ArrayAdapter<ProductItem>(context, 0, items) {
+
+    override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+        val view = convertView ?: LayoutInflater.from(context)
+            .inflate(R.layout.item_product, parent, false)
+
+        val item = getItem(position)
+        val checkBox = view.findViewById<CheckBox>(R.id.checkbox_bought)
+        val textBox = view.findViewById<TextView>(R.id.text)
+
+        if (item != null) {
+            textBox.text = item.toString()
+
+            // Set the checkbox state
+            checkBox.setOnCheckedChangeListener(null)  // reset listener for recycled views
+            checkBox.isChecked = item.isChecked
+
+            // Update item and database on toggle
+            checkBox.setOnCheckedChangeListener { _, isChecked ->
+                item.isChecked = isChecked
+                dataSource.updateProductChecked(item.id, isChecked)
+            }
+        }
+
+        return view
+    }
+}

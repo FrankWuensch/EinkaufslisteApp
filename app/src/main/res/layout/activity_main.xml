@@ -8,7 +8,7 @@
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:focusableInTouchMode="true"
         android:paddingTop="16dp"
         android:paddingHorizontal="16dp">
@@ -39,7 +39,9 @@
     <ListView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/listview_shopping_memos"
-        android:layout_gravity="center_horizontal" />
+        android:id="@+id/listview_product_items"
+        android:layout_gravity="center_horizontal"
+        android:paddingTop="8dp"
+        android:paddingHorizontal="6dp" />
 
 </LinearLayout>
