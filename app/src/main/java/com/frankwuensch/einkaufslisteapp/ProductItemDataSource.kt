@@ -4,7 +4,6 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.util.Log
-import android.widget.EditText
 import com.frankwuensch.einkaufslisteapp.ProductItemDbHelper.Companion.COLUMN_ID
 import com.frankwuensch.einkaufslisteapp.ProductItemDbHelper.Companion.COLUMN_PRODUCT
 import com.frankwuensch.einkaufslisteapp.ProductItemDbHelper.Companion.COLUMN_QUANTITY
