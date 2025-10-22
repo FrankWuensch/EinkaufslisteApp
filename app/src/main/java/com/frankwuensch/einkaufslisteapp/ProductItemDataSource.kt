@@ -4,6 +4,7 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.util.Log
+import android.widget.EditText
 import com.frankwuensch.einkaufslisteapp.ProductItemDbHelper.Companion.COLUMN_ID
 import com.frankwuensch.einkaufslisteapp.ProductItemDbHelper.Companion.COLUMN_PRODUCT
 import com.frankwuensch.einkaufslisteapp.ProductItemDbHelper.Companion.COLUMN_QUANTITY
@@ -53,31 +54,43 @@ class ProductItemDataSource(context: Context) {
         return productList
     }
 
-    fun insertProduct(productItem: ProductItem): Long? {
+    fun insertOrUpdateProduct(productItem: ProductItem, newQuantity: Int): Long {
         val db = database ?: return -1L
 
-        val values = ContentValues().apply {
-            put(ProductItemDbHelper.COLUMN_PRODUCT, productItem.product)
-            put(ProductItemDbHelper.COLUMN_QUANTITY, productItem.quantity)
-        }
-
-        return try {
-            db.insert(ProductItemDbHelper.TABLE_SHOPPING_LIST, null, values)
-            Log.d(LOG_TAG, "Produkt ${productItem.product} erfolgreich gespeichert.")
-            productItem.id
-        } catch (ex: Exception) {
-            Log.e(LOG_TAG, "Fehler beim Einfügen: ${ex.message}.")
-            -1L
-        }
-    }
-
-    fun deleteProduct(id: Long?): Int {
-        val db = dbHelper.writableDatabase
-        return db.delete(
+        // Prüfen, ob das Produkt schon existiert
+        val cursor = db.query(
             ProductItemDbHelper.TABLE_SHOPPING_LIST,
-            "${ProductItemDbHelper.COLUMN_ID} = ?",
-            arrayOf(id.toString())
+            arrayOf(ProductItemDbHelper.COLUMN_ID, ProductItemDbHelper.COLUMN_QUANTITY),
+            "${ProductItemDbHelper.COLUMN_PRODUCT} = ?",
+            arrayOf(productItem.product),
+            null, null, null
         )
+
+        return if (cursor.moveToFirst()) {
+            val existingId = cursor.getLong(cursor.getColumnIndexOrThrow(ProductItemDbHelper.COLUMN_ID))
+
+            val values = ContentValues().apply {
+                put(ProductItemDbHelper.COLUMN_QUANTITY, newQuantity)
+            }
+
+            db.update(
+                ProductItemDbHelper.TABLE_SHOPPING_LIST,
+                values,
+                "${ProductItemDbHelper.COLUMN_ID} = ?",
+                arrayOf(existingId.toString())
+            )
+
+            cursor.close()
+            existingId
+        } else {
+            val values = ContentValues().apply {
+                put(ProductItemDbHelper.COLUMN_PRODUCT, productItem.product)
+                put(ProductItemDbHelper.COLUMN_QUANTITY, newQuantity)
+            }
+            val id = db.insert(ProductItemDbHelper.TABLE_SHOPPING_LIST, null, values)
+            cursor.close()
+            id
+        }
     }
 
     fun updateProductChecked(id: Long?, isChecked: Boolean): Int {
@@ -91,6 +104,38 @@ class ProductItemDataSource(context: Context) {
             "${ProductItemDbHelper.COLUMN_ID} = ?",
             arrayOf(id.toString())
         )
+    }
+
+    fun deleteProduct(id: Long?): Int {
+        val db = dbHelper.writableDatabase
+        return db.delete(
+            ProductItemDbHelper.TABLE_SHOPPING_LIST,
+            "${ProductItemDbHelper.COLUMN_ID} = ?",
+            arrayOf(id.toString())
+        )
+    }
+
+    fun getProductSuggestions(query: String): List<String> {
+        val db = dbHelper.readableDatabase
+        val cursor = db.query(
+            ProductItemDbHelper.TABLE_SHOPPING_LIST,
+            arrayOf(ProductItemDbHelper.COLUMN_PRODUCT),
+            "${ProductItemDbHelper.COLUMN_PRODUCT} LIKE ?",
+            arrayOf("%$query%"),
+            null, null,
+            "${ProductItemDbHelper.COLUMN_PRODUCT} ASC"
+        )
+
+        val suggestions = mutableListOf<String>()
+        with(cursor) {
+            while (moveToNext()) {
+                val product = getString(getColumnIndexOrThrow(ProductItemDbHelper.COLUMN_PRODUCT))
+                suggestions.add(product)
+            }
+        }
+
+        cursor.close()
+        return suggestions.distinct()
     }
 
     fun close() {

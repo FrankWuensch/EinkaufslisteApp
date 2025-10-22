@@ -4,11 +4,14 @@ import android.app.AlertDialog
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.ListView
 import android.widget.Toast
+import androidx.core.widget.addTextChangedListener
 
 class MainActivity : AppCompatActivity() {
 
@@ -27,6 +30,15 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        if (savedInstanceState == null) {
+            AlertDialog.Builder(this).setTitle("Info")
+                .setMessage("Lange auf einen Listeneintrag klicken, um diesen zu löschen.")
+                .setIcon(R.drawable.twotone_info_24)
+                .setPositiveButton("OK") { dialog, _ ->
+                    dialog.dismiss()
+                }.show()
+        }
+
         dbHelper = ProductItemDbHelper(this)
         dataSource = ProductItemDataSource(this)
 
@@ -35,6 +47,21 @@ class MainActivity : AppCompatActivity() {
         textEditProduct = findViewById(R.id.editText_product)
         buttonAddProduct = findViewById(R.id.button_add_product)
 
+        textEditProduct.addTextChangedListener { editable ->
+            val query = editable?.toString()?.trim() ?: ""
+            if (query.isNotEmpty()) {
+                val suggestions = dataSource.getProductSuggestions(query)
+                val adapter = ArrayAdapter(
+                    this,
+                    android.R.layout.simple_dropdown_item_1line,
+                    suggestions
+                )
+                (textEditProduct as AutoCompleteTextView).setAdapter(adapter)
+                adapter.notifyDataSetChanged()
+                (textEditProduct as AutoCompleteTextView).showDropDown()
+            }
+        }
+
         adapter = ProductAdapter(this, productItemsList, dataSource)
         listView.adapter = adapter
 
@@ -42,9 +69,9 @@ class MainActivity : AppCompatActivity() {
             val quantity = textEditQuantity.text.toString().toIntOrNull() ?: 0
             val product = textEditProduct.text.toString()
 
-            if (quantity >= 1) {
+            if (quantity >= 1 && product != "") {
                 val productItem = ProductItem(product, quantity)
-                val id = dataSource.insertProduct(productItem)
+                val id = dataSource.insertOrUpdateProduct(productItem, quantity)
 
                 if (id != -1L) {
                     refreshProductList()
@@ -52,7 +79,12 @@ class MainActivity : AppCompatActivity() {
                     Log.e("MainActivity", "Einfügen in Datenbank fehlgeschlagen")
                 }
             } else {
-                Toast.makeText(this, "Anzahl muss größer oder gleich 1 sein.", Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    this,
+                    "Anzahl muss größer oder gleich 1 sein und Produkttext darf nicht leer sein.",
+                    Toast.LENGTH_LONG
+                )
+                    .show()
             }
         }
 
@@ -63,7 +95,7 @@ class MainActivity : AppCompatActivity() {
                 // Show a confirmation dialog before deleting
                 AlertDialog.Builder(this)
                     .setTitle("Produkt löschen")
-                    .setMessage("Soll(en) '${productItem.toString()}' wirklich von der Liste gelöscht werden?")
+                    .setMessage("Soll(en) '${productItem.product}' wirklich von der Liste gelöscht werden?")
                     .setPositiveButton("Löschen") { _, _ ->
                         val deletedRows = dataSource.deleteProduct(productItem.id)
                         if (deletedRows > 0) {
@@ -103,10 +135,15 @@ class MainActivity : AppCompatActivity() {
         adapter.clear()
         productItemsList.clear()
         productItemsList.addAll(productsFromDb)
+        productItemsList.sortWith(
+            compareBy<ProductItem> {
+                it.product.lowercase()
+            }.thenBy { it.quantity }
+        )
         adapter.notifyDataSetChanged()
         Log.d(
             "debug",
-            "items of productItemsList: $productItemsList; type of productItemsList: ${productItemsList.javaClass.toString()}"
+            "items of productItemsList: $productItemsList; type of productItemsList: ${productItemsList.javaClass}"
         )
         textEditQuantity.text.clear()
         textEditProduct.text.clear()
