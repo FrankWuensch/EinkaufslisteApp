@@ -39,6 +39,8 @@ class ProductItemDbHelper(context: Context) :
     }
 
     override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
-        TODO("Not yet implemented")
+        if (oldVersion < 2) {
+            TODO("not yet implemented")
+        }
     }
 }
