@@ -56,7 +56,6 @@ class ProductItemDataSource(context: Context) {
     fun insertOrUpdateProduct(productItem: ProductItem, newQuantity: Int): Long {
         val db = database ?: return -1L
 
-        // Prüfen, ob das Produkt schon existiert
         val cursor = db.query(
             ProductItemDbHelper.TABLE_SHOPPING_LIST,
             arrayOf(ProductItemDbHelper.COLUMN_ID, ProductItemDbHelper.COLUMN_QUANTITY),
