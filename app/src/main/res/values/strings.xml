@@ -13,4 +13,5 @@
     <string name="dialog_title_product">Produkt:</string>
     <string name="dialog_button_positive">Ändern</string>
     <string name="dialog_button_negative">Abbrechen</string>
+    <string name="erledigt">Erledigt</string>
 </resources>

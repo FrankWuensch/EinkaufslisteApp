@@ -11,30 +11,27 @@ import android.widget.TextView
 class ProductAdapter(
     context: Context,
     private val items: MutableList<ProductItem>,
-    val dataSource: ProductItemDataSource
+    private val dataSource: ProductItemDataSource
 ) : ArrayAdapter<ProductItem>(context, 0, items) {
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         val view = convertView ?: LayoutInflater.from(context)
             .inflate(R.layout.item_product, parent, false)
 
+        val textView = view.findViewById<TextView>(R.id.text)
+        val checkBox = view.findViewById<CheckBox>(R.id.checkbox_brought)
+
         val item = getItem(position)
-        val checkBox = view.findViewById<CheckBox>(R.id.checkbox_bought)
-        val textBox = view.findViewById<TextView>(R.id.text)
 
-        if (item != null) {
-            textBox.text = item.toString()
+        // Text anzeigen
+        textView.text = "${item?.product} (${item?.quantity})"
 
-            // Set the checkbox state
-            checkBox.setOnCheckedChangeListener(null)  // reset listener for recycled views
-            checkBox.isChecked = item.isChecked
+        // Checkbox-Status anzeigen
+        checkBox.isChecked = item?.isChecked ?: false
 
-            // Update item and database on toggle
-            checkBox.setOnCheckedChangeListener { _, isChecked ->
-                item.isChecked = isChecked
-                dataSource.updateProductChecked(item.id, isChecked)
-            }
-        }
+        // Checkbox nicht klickbar, wir nutzen den ListView-Click
+        checkBox.isClickable = false
+        checkBox.isFocusable = false
 
         return view
     }
