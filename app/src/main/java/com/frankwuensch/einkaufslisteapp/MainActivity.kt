@@ -29,6 +29,19 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var autoCompleteAdapter: ArrayAdapter<String>
 
+    /**
+     * Initializes the activity, sets up the user interface, and registers event listeners.
+     *
+     * This is the main entry point for the activity when it is first created. It handles:
+     * - Inflating the layout (`R.layout.activity_main`).
+     * - Initializing the database helper and data source.
+     * - Setting up adapters for the shopping and "done" lists.
+     * - Configuring click listeners for adding, moving, and deleting items.
+     *
+     * @param savedInstanceState If the activity is being re-initialized after
+     *     previously being shut down, this Bundle contains the data it most
+     *     recently supplied in [onSaveInstanceState]. Otherwise, it is null.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
