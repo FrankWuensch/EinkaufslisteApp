@@ -19,3 +19,14 @@
 - [ ] Automatisches Hinzufügen von Zutaten aus Rezepten (KI gestützt)
 - [ ] Graphische Darstellung der Preisentwicklung ausgewählter Produkte
 - [ ] Möglichkeit, eigene Rezepte zu hinterlegen
+
+## Dokumentation erzeugen
+Terminal öffnen und folgenden Befehl ausführen:
+
+```bash
+./gradlew clean dokkaGenerateHtml
+```
+
+Der Befehl erzeugt die Dokumentation der App anhand von speziell formatierten Kommentaren und
+legt eine html Datei im Pfad `app/build/dokka/html/index.html` ab. Diese kann dann mit dem
+Browser geöffnet und durchsucht werden.
