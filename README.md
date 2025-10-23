@@ -1,9 +1,9 @@
 # App Einkaufsliste
 
 ## Geplante Funktionen
-* Erstellen der Einkaufsliste mit wenigen Klicks
+- [x] Erstellen der Einkaufsliste mit wenigen Klicks
 * typische Verkaufseinheiten in Datenbank hinterlegen
-* Suchfunktion für Datenbank
+- [x] Suchfunktion für Datenbank
 * Möglichkeit, eigene Fotos in der Datenbank zu hinterlegen
 * Möglichkeit, favorisierte Produkte in der Datenbank zu hinterlegen
 * automatische Preisabfrage / Angebotsabfrage nach Zustimmung des Nutzers
