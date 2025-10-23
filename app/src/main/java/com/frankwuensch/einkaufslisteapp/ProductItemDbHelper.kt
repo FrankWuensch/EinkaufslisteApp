@@ -43,7 +43,6 @@ class ProductItemDbHelper(context: Context) :
         try {
             Log.d(LOG_TAG, "Die Tabelle wird mit dem SQL-Befehl: $SQL_CREATE angelegt.")
             db.execSQL(SQL_CREATE)
-            insertInitialProducts(db)
         } catch (ex: Exception) {
             Log.e(LOG_TAG, "Fehler beim Anlegen der Tabelle: ${ex.message}")
         }
@@ -53,32 +52,44 @@ class ProductItemDbHelper(context: Context) :
         Log.d(LOG_TAG, "Upgrade der Datenbank von Version $oldVersion auf $newVersion.")
     }
 
-    fun insertInitialProducts(db: SQLiteDatabase?) {
+    fun insertInitialProductsAlways(db: SQLiteDatabase?) {
         val initialProducts = listOf(
-            "Milch" to 1,
-            "Eier" to 10,
-            "Brot" to 1,
-            "Käse" to 1,
-            "Butter" to 1,
-            "Äpfel" to 5,
-            "Tomaten" to 1,
-            "Birnen" to 5,
-            "Orangen" to 5,
-            "Avokado" to 3,
-            "Jogurt" to 2,
-            "Saure Sahne" to 2,
-            "Süße Sahne" to 2,
-            "Sauerrahm" to 2,
-            "Speisequark" to 1
+            ProductItem("Milch", 1, false, 1, 1L),
+            ProductItem("Eier", 10, false, 1, 2L),
+            ProductItem("Brot", 1, false, 1, 3L),
+            ProductItem("Käse", 1, false, 1, 4L),
+            ProductItem("Butter", 1, false, 1, 5L),
+            ProductItem("Äpfel", 5, false, 1, 6L),
+            ProductItem("Tomaten", 1, false, 1, 7L),
+            ProductItem("Birnen", 5, false, 1, 8L),
+            ProductItem("Orangen", 5, false, 1, 9L),
+            ProductItem("Avokado", 3, false, 1, 10L),
+            ProductItem("Jogurt", 2, false, 1, 11L)
         )
 
-        for ((product, quantity) in initialProducts) {
-            val values = ContentValues().apply {
-                put(COLUMN_PRODUCT, product)
-                put(COLUMN_QUANTITY, quantity)
-                put(COLUMN_IS_INITIAL, 1)
+        initialProducts.forEach { product ->
+            val cursor = db?.query(
+                TABLE_SHOPPING_LIST,
+                arrayOf(COLUMN_ID),
+                "$COLUMN_PRODUCT = ?",
+                arrayOf(product.product),
+                null,
+                null,
+                null
+            )
+            val exists: Boolean = cursor?.count!! > 0
+            cursor.close()
+
+            if (!exists) {
+                val values = ContentValues().apply {
+                    put(COLUMN_PRODUCT, product.product)
+                    put(COLUMN_QUANTITY, product.quantity)
+                    put(COLUMN_IS_INITIAL, product.isInitial)
+                    put(COLUMN_ID, product.id)
+                    put(COLUMN_BROUGHT, 0)
+                }
+                db.insert(TABLE_SHOPPING_LIST, null, values)
             }
-            db?.insert(TABLE_SHOPPING_LIST, null, values)
         }
     }
 }

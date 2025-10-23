@@ -23,13 +23,8 @@ class ProductAdapter(
 
         val item = getItem(position)
 
-        // Text anzeigen
-        textView.text = "${item?.product} (${item?.quantity})"
-
-        // Checkbox-Status anzeigen
+        textView.text = "${item?.toString()}"
         checkBox.isChecked = item?.isChecked ?: false
-
-        // Checkbox nicht klickbar, wir nutzen den ListView-Click
         checkBox.isClickable = false
         checkBox.isFocusable = false
 

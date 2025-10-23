@@ -1,9 +1,9 @@
 package com.frankwuensch.einkaufslisteapp
 
 import android.app.AlertDialog
+import android.content.ContentValues
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import android.util.Log
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.Button
@@ -27,21 +27,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var textEditProduct: AutoCompleteTextView
     private lateinit var buttonAddProduct: Button
 
-    // Autocomplete Adapter einmal erstellen
     private lateinit var autoCompleteAdapter: ArrayAdapter<String>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        if (savedInstanceState == null) {
-            AlertDialog.Builder(this).setTitle("Info")
-                .setMessage("Lange auf einen Listeneintrag klicken, um diesen zu löschen.")
-                .setIcon(R.drawable.twotone_info_24)
-                .setPositiveButton("OK") { dialog, _ ->
-                    dialog.dismiss()
-                }.show()
-        }
 
         dbHelper = ProductItemDbHelper(this)
         dataSource = ProductItemDataSource(this)
@@ -52,7 +42,6 @@ class MainActivity : AppCompatActivity() {
         textEditProduct = findViewById(R.id.editText_product)
         buttonAddProduct = findViewById(R.id.button_add_product)
 
-        // Autocomplete Adapter initialisieren
         autoCompleteAdapter = ArrayAdapter(
             this,
             android.R.layout.simple_dropdown_item_1line,
@@ -76,6 +65,11 @@ class MainActivity : AppCompatActivity() {
         listViewProductItems.adapter = productAdapter
         listViewDoneItems.adapter = doneAdapter
 
+        val db = dataSource.getWriteableDatabase()!!
+        dbHelper.insertInitialProductsAlways(db)
+
+        refreshProductList()
+
         buttonAddProduct.setOnClickListener {
             val quantity = textEditQuantity.text.toString().toIntOrNull() ?: 0
             val product = textEditProduct.text.toString().trim()
@@ -83,9 +77,14 @@ class MainActivity : AppCompatActivity() {
             if (quantity >= 1 && product.isNotEmpty()) {
                 val productItem = ProductItem(product, quantity)
 
-                // Insert/Update ohne unnötige if-Bedingung
-                dataSource.insertOrUpdateProduct(productItem, quantity, 0)
+                val values = ContentValues().apply {
+                    put(ProductItemDbHelper.COLUMN_PRODUCT, productItem.product)
+                    put(ProductItemDbHelper.COLUMN_QUANTITY, productItem.quantity)
+                    put(ProductItemDbHelper.COLUMN_IS_INITIAL, 0)
+                    put(ProductItemDbHelper.COLUMN_BROUGHT, 0)
+                }
 
+                db.insert(ProductItemDbHelper.TABLE_SHOPPING_LIST, null, values)
                 refreshProductList()
             } else {
                 Toast.makeText(
@@ -106,6 +105,15 @@ class MainActivity : AppCompatActivity() {
 
         setupDeleteOnLongClick(listViewProductItems, productAdapter, dataSource)
         setupDeleteOnLongClick(listViewDoneItems, doneAdapter, dataSource)
+
+        if (savedInstanceState == null) {
+            AlertDialog.Builder(this)
+                .setTitle("Info")
+                .setMessage("Lange auf einen Listeneintrag klicken, um diesen zu löschen.")
+                .setIcon(R.drawable.twotone_info_24)
+                .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
+                .show()
+        }
     }
 
     private fun moveItemBetweenLists(
@@ -173,12 +181,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun refreshProductList() {
-        val productsFromDb = dataSource.readAllProducts(dbHelper)
+        val allProducts = dataSource.readAllProducts(dbHelper)
+
         productItemsList.clear()
         doneItemsList.clear()
 
-        productsFromDb.forEach {
-            if (it.isChecked) doneItemsList.add(it) else productItemsList.add(it)
+        allProducts.filter { it.isInitial == 0 }.forEach { item ->
+            if (item.isChecked) doneItemsList.add(item) else productItemsList.add(item)
         }
 
         productItemsList.sortWith(compareBy<ProductItem> { it.product.lowercase() }.thenBy { it.quantity })
