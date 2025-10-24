@@ -3,6 +3,7 @@ package com.frankwuensch.einkaufslisteapp
 import android.app.AlertDialog
 import android.content.ContentValues
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
@@ -11,6 +12,10 @@ import android.widget.EditText
 import android.widget.ListView
 import android.widget.Toast
 import androidx.core.widget.addTextChangedListener
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MainActivity : AppCompatActivity() {
 
@@ -45,6 +50,9 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        // just for testing
+        startScraping()
 
         dbHelper = ProductItemDbHelper(this)
         dataSource = ProductItemDataSource(this)
@@ -217,6 +225,39 @@ class MainActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         dataSource.getWriteableDatabase()
+    }
+
+    private fun startScraping() {
+        // lifecycleScope ensures this process is cancelled if the user leaves the screen.
+        lifecycleScope.launch {
+            try {
+                Log.d("Scraping", "Coroutine in MainActivity has started.")
+                // Switch to a background thread to perform the network call.
+                val links = withContext(Dispatchers.IO) {
+                    // ACTUALLY CALL the new suspend function.
+                    fetchAllLinks("https://kotlinlang.org/docs/reference/")
+                }
+
+                // --- Back on the main thread, update the UI ---
+
+                // Process the raw links to get clean product names
+                val productNames = links
+                    .map { it.substringAfterLast('/').replace("-", " ").trim() }
+                    .filter { it.isNotEmpty() }
+
+                // Update the AutoCompleteTextView's adapter with the new data
+                autoCompleteAdapter.clear()
+                autoCompleteAdapter.addAll(productNames)
+                autoCompleteAdapter.notifyDataSetChanged()
+
+                Toast.makeText(this@MainActivity, "Scraping successful: ${productNames.size} names loaded.", Toast.LENGTH_LONG).show()
+
+            } catch (e: Exception) {
+                // This will now catch actual network errors (e.g., no internet).
+                e.printStackTrace()
+                Toast.makeText(this@MainActivity, "Scraping failed: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
     }
 
     override fun onStop() {

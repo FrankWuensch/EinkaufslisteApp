@@ -35,6 +35,30 @@ android {
     kotlin {
         jvmToolchain(17)
     }
+
+    packagingOptions {
+        // The 'resources' block is the modern, recommended way to handle resource files.
+        resources {
+            // Use 'excludes.add()' or 'excludes.addAll()' for Kotlin DSL (.kts files).
+            // This prevents build failures from duplicate files included by multiple libraries.
+            excludes.addAll(
+                setOf(
+                    "META-INF/DEPENDENCIES",
+                    "META-INF/LICENSE",
+                    "META-INF/LICENSE.txt",
+                    "META-INF/license.txt",
+                    "META-INF/NOTICE",
+                    "META-INF/NOTICE.txt",
+                    "META-INF/notice.txt",
+                    "META-INF/ASL2.0",
+                    "META-INF/*.kotlin_module",
+                    "META-INF/LICENSE.md",
+                    "META-INF/LICENSE-notice.md",
+                    "mozilla/public-suffix-list.txt"
+                )
+            )
+        }
+    }
 }
 
 dependencies {
@@ -44,6 +68,7 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    implementation("it.skrape:skrapeit:1.2.2")
 }
 
 tasks.withType<org.jetbrains.dokka.gradle.DokkaTask>().configureEach {
